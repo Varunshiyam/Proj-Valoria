@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description:
     'Modern, cinematic SVG logo intro animation with shared layout morphing, spring physics, and OKLCH dark aesthetics.',
   icons: {
-    icon: '/logos/valoria-logo-traced.svg',
+    icon: '/logos/Valoria%20Icon.png',
   },
 };
 

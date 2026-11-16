@@ -11,6 +11,7 @@ import {
   Scale,
   GraduationCap,
   ScrollText,
+  CreditCard,
   Search,
   ChevronRight,
 } from 'lucide-react';
@@ -32,6 +33,7 @@ const DOCUMENT_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'grievance-redressal': Scale,
   'internship-disclaimer': GraduationCap,
   'internship-terms': ScrollText,
+  'internship-payment-policy': CreditCard,
 };
 
 export function LegalModal({
