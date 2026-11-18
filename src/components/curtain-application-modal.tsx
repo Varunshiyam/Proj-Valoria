@@ -1020,13 +1020,14 @@ export function CurtainApplicationModal({
                   </div>
 
                   <label className="block text-[13px] font-medium text-neutral-300 tracking-tight">
-                    Resume / CV Upload <span className="text-neutral-500 font-normal">(Optional)</span>
+                    Resume / CV Upload <span className="text-neutral-500">*</span>
                     <span className="mt-1.5 flex min-h-[48px] items-center gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-2 text-sm text-neutral-300 transition hover:border-white/25 cursor-pointer">
                       <Upload className="size-4 text-neutral-400" />
                       <input
                         name="resume"
                         type="file"
                         accept=".pdf,.doc,.docx"
+                        required
                         className="min-w-0 flex-1 text-xs file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-white/[0.12] file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-white/[0.18]"
                       />
                     </span>
