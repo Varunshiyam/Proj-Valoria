@@ -169,11 +169,24 @@ function MatteIconBadge({ icon: Icon, size = 'md', className = '' }: MatteIconBa
 }
 
 // ============================================================================
-// MAIN COMPONENT: CONNECT SECTION (LANDING VIEW OVERLAY)
+// MAIN COMPONENT: CONNECT SECTION (LANDING VIEW OVERLAY & STANDALONE PAGE)
 // ============================================================================
 
-export function ConnectSection() {
+export interface ConnectSectionProps {
+  standalone?: boolean;
+}
+
+export function ConnectSection({ standalone = false }: ConnectSectionProps = {}) {
   const { isConnectOpen, closeConnect } = useSectionNavigation();
+  const isOpen = standalone || isConnectOpen;
+
+  const handleReturn = () => {
+    if (standalone) {
+      window.location.href = '/';
+    } else {
+      closeConnect();
+    }
+  };
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -201,28 +214,32 @@ export function ConnectSection() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Lock document body scroll when Let's Connect page is open
+  // Lock document body scroll when Let's Connect overlay is open (in embedded mode)
   useEffect(() => {
-    if (isConnectOpen) {
+    if (!standalone && isConnectOpen) {
       document.body.style.overflow = 'hidden';
-    } else {
+    } else if (!standalone) {
       document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = '';
+      if (!standalone) {
+        document.body.style.overflow = '';
+      }
     };
-  }, [isConnectOpen]);
+  }, [isConnectOpen, standalone]);
 
   // Escape key to exit cleanly
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isConnectOpen) {
-        closeConnect();
+      if (e.key === 'Escape') {
+        if (!standalone && isConnectOpen) {
+          closeConnect();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isConnectOpen, closeConnect]);
+  }, [isConnectOpen, closeConnect, standalone]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -330,14 +347,16 @@ export function ConnectSection() {
 
   return (
     <AnimatePresence>
-      {isConnectOpen && (
+      {isOpen && (
         <motion.div
           id="connect"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-40 bg-[#050608] min-h-screen overflow-y-auto text-white selection:bg-white selection:text-black"
+          className={`z-40 bg-[#050608] min-h-screen overflow-y-auto text-white selection:bg-white selection:text-black ${
+            standalone ? 'relative w-full' : 'fixed inset-0'
+          }`}
         >
           {/* Star Casing Background with EXACTLY ONE Pink Shooting Star */}
           <StarCasingBackground className="opacity-95" />
@@ -410,8 +429,8 @@ export function ConnectSection() {
 
                 <button
                   type="button"
-                  onClick={closeConnect}
-                  className="group inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.05] px-4 py-2 text-xs font-medium text-zinc-300 transition-all hover:bg-white/10 hover:text-white active:scale-95"
+                  onClick={handleReturn}
+                  className="group inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.05] px-4 py-2 text-xs font-medium text-zinc-300 transition-all hover:bg-white/10 hover:text-white active:scale-95 cursor-pointer"
                 >
                   <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
                   <span>Return to Website</span>
@@ -527,8 +546,8 @@ export function ConnectSection() {
 
                   <button
                     type="button"
-                    onClick={closeConnect}
-                    className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.05] px-6 py-2.5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-colors"
+                    onClick={handleReturn}
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.05] px-6 py-2.5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
                   >
                     Done
                   </button>
@@ -937,8 +956,8 @@ export function ConnectSection() {
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                       <button
                         type="button"
-                        onClick={closeConnect}
-                        className="w-full sm:w-auto rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-2.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+                        onClick={handleReturn}
+                        className="w-full sm:w-auto rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-2.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
                       >
                         Cancel
                       </button>

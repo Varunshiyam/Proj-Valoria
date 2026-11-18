@@ -340,6 +340,16 @@ body {
 }
 
 /* =============================================================================
+   Suppress Next.js Dev Overlay / Indicator Button
+============================================================================= */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-tools-button],
+[data-next-badge] {
+  display: none !important;
+}
+
+/* =============================================================================
    Infinite Marquee & Capability Stream Animations
 ============================================================================= */
 @keyframes marquee-stream-left {
@@ -373,4 +383,14 @@ body {
 .animate-marquee-left:hover,
 .animate-marquee-right:hover {
   animation-play-state: paused;
+}
+
+/* =============================================================================
+   Suppress Next.js Dev Overlay / Indicator Button
+============================================================================= */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-tools-button],
+[data-next-badge] {
+  display: none !important;
 }

@@ -582,6 +582,7 @@ export function CurtainApplicationModal({
     const currentDegree = degree.trim();
     const currentCourse = track.trim();
     const gradYearNum = Number(graduationYear);
+    const resumeFile = formData.get('resume') as File | null;
 
     if (
       !firstName ||
@@ -597,7 +598,13 @@ export function CurtainApplicationModal({
       !currentCourse ||
       !gradYearNum
     ) {
-      setSaveMessage('Please fill in all mandatory marked fields, including College Name, State, and District.');
+      setSaveMessage('Please fill in all mandatory marked fields, including College Name, State, District, and Major Field of Study.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!resumeFile || resumeFile.size === 0) {
+      setSaveMessage('Please upload your Resume / CV (PDF, DOC, DOCX) before submitting.');
       setIsSubmitting(false);
       return;
     }
@@ -1020,12 +1027,13 @@ export function CurtainApplicationModal({
                   </div>
 
                   <label className="block text-[13px] font-medium text-neutral-300 tracking-tight">
-                    Resume / CV Upload <span className="text-neutral-500 font-normal">(Optional)</span>
+                    Resume / CV Upload <span className="text-neutral-500">*</span>
                     <span className="mt-1.5 flex min-h-[48px] items-center gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-2 text-sm text-neutral-300 transition hover:border-white/25 cursor-pointer">
                       <Upload className="size-4 text-neutral-400" />
                       <input
                         name="resume"
                         type="file"
+                        required
                         accept=".pdf,.doc,.docx"
                         className="min-w-0 flex-1 text-xs file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-white/[0.12] file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-white/[0.18]"
                       />
@@ -1182,7 +1190,19 @@ export function CurtainApplicationModal({
                       <span>Internship Program Disclaimer</span>
                       <ExternalLink className="size-2.5" />
                     </button>
-                    , understanding that this is an experiential training and industrial project implementation programme that does not guarantee permanent employment or placement.
+                    {' '}and{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveLegalModalDoc('payment-policy');
+                      }}
+                      className="text-blue-400 hover:text-blue-300 underline font-medium inline-flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <span>Payment &amp; Refund Policy</span>
+                      <ExternalLink className="size-2.5" />
+                    </button>
+                    , understanding that this is an experiential training and industrial project implementation programme requiring advance non-refundable fee payment, and does not guarantee permanent employment or placement.
                   </div>
                 </label>
               </div>

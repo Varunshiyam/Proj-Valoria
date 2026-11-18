@@ -16,11 +16,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Valoria — Autonomous Motion Systems',
+  title: 'Valoria Tech',
   description:
-    'Modern, cinematic SVG logo intro animation with shared layout morphing, spring physics, and OKLCH dark aesthetics.',
+    'Where Vision Becomes Technology. Autonomous engineering, bespoke architectures, and next-generation systems.',
   icons: {
-    icon: '/logos/valoria-logo-traced.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/logos/valoria-tab-icon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 

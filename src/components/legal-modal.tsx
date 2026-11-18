@@ -13,6 +13,7 @@ import {
   ScrollText,
   Search,
   ChevronRight,
+  CreditCard,
 } from 'lucide-react';
 import { LEGAL_DOCUMENTS, type LegalDocument } from '@/data/legal-documents';
 import { ValoriaLogo } from './valoria-logo';
@@ -32,6 +33,7 @@ const DOCUMENT_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'grievance-redressal': Scale,
   'internship-disclaimer': GraduationCap,
   'internship-terms': ScrollText,
+  'payment-policy': CreditCard,
 };
 
 export function LegalModal({

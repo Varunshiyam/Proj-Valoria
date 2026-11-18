@@ -322,5 +322,56 @@ export const LEGAL_DOCUMENTS: Record<string, LegalDocument> = {
       },
     ],
   },
+
+  'payment-policy': {
+    id: 'payment-policy',
+    title: 'Payment & Refund Policy',
+    category: 'internship',
+    effectiveDate: 'January 1, 2026',
+    lastUpdated: 'November 18, 2026',
+    version: '1.0',
+    summary:
+      'Official statutory terms governing advance fee payments, single-installment requirements, and strict non-refundable policies for all applicants and enrolled participants in the Valoria Technology Internship Programme.',
+    sections: [
+      {
+        heading: 'Advance Payment Requirement',
+        content: [
+          'All students enrolling in the Valoria Technology Internship Programme are required to complete the applicable programme fee payment before the commencement of Phase 1 (Training & Skill Acceleration).',
+          '• Full payment must be successfully completed before the scheduled training commencement date.',
+          '• Students will be permitted to commence the training programme only after successful verification and confirmation of their payment.',
+          '• Registration or submission of an internship application alone does not guarantee access to the training programme.',
+          '• Valoria Technology reserves the right to withhold programme access until the required payment has been received and verified.',
+        ],
+      },
+      {
+        heading: 'Full Payment Policy – No Installment Facility',
+        content: [
+          'The Internship Programme requires payment of the entire applicable programme fee at the time of enrollment.',
+          '• Students must pay 100% of the prescribed programme fee before the commencement of Phase 1.',
+          '• Partial payments, installment-based payments, or deferred payment arrangements are not available.',
+          '• Students are responsible for ensuring that the complete payment is successfully processed within the specified payment period.',
+          '• Failure to complete the full payment may result in the cancellation or suspension of the student\'s enrollment.',
+        ],
+      },
+      {
+        heading: 'Non-Refundable Payment Policy',
+        content: [
+          'All payments made towards enrollment in the Valoria Technology Internship Programme are non-refundable once successfully processed.',
+          '• If a student voluntarily discontinues, withdraws from, or chooses not to continue the programme for personal, academic, professional, financial, health-related, or any other reasons, the amount paid will not be refunded.',
+          '• Non-participation in training sessions, failure to complete assigned tasks, or voluntary withdrawal from the programme does not create an entitlement to a refund.',
+          '• Students are advised to carefully evaluate their availability, commitment, and eligibility before making the payment.',
+          '• By completing the payment, students acknowledge and accept the non-refundable nature of the programme fee, subject to applicable statutory laws and regulations.',
+        ],
+      },
+      {
+        heading: 'Student Acknowledgement and Acceptance',
+        content: [
+          'By registering for the Valoria Technology Internship Programme and completing the payment, students acknowledge that they have read, understood, and agreed to the payment terms and conditions outlined in this policy.',
+          'Students are responsible for reviewing the programme structure, duration, eligibility requirements, and financial obligations before confirming their enrollment.',
+          'Valoria Technology reserves the right to amend or update this policy when necessary, subject to applicable laws and regulations. Any revised policy will be communicated through appropriate official channels.',
+        ],
+      },
+    ],
+  },
 };
 
