@@ -19,7 +19,6 @@ import {
   ShieldCheck,
   ExternalLink,
 } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { ValoriaLogo } from '@/components/valoria-logo';
 import { IndiaStateMap } from '@/components/india-state-map';
 import { LegalModal } from '@/components/legal-modal';
@@ -387,9 +386,8 @@ function TrackAutofillSlider({ value, onChange }: TrackAutofillSliderProps) {
           name="course"
           value={query}
           onChange={handleInputChange}
-          required
           autoComplete="off"
-          placeholder="Search your Field"
+          placeholder="Search your Field (optional)"
           className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 py-3 text-sm sm:text-base font-normal text-white placeholder:text-neutral-500 focus:border-white/30 focus:ring-4 focus:ring-white/[0.08] focus:outline-none transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]"
         />
         <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-neutral-400">
@@ -566,6 +564,9 @@ export function CurtainApplicationModal({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+
     setIsSubmitting(true);
     setSaveMessage('Submitting your application…');
 
@@ -580,7 +581,17 @@ export function CurtainApplicationModal({
     const currentLocation = locationState.trim();
     const currentDistrict = district.trim();
     const currentDegree = degree.trim();
-    const currentCourse = track.trim();
+
+    // The selected internship program is stored in the Students.Course column.
+    const internshipRole =
+      applyingProgram === 'salesforce'
+        ? 'SALESFORCE DEVELOPER I'
+        : applyingProgram === 'ai-pe'
+          ? 'AI PRODUCT ENGINEER'
+          : applyingProgram === 'sde'
+            ? 'Software Development Engineering (SDE)'
+            : applyingProgram.toUpperCase();
+
     const gradYearNum = Number(graduationYear);
     const resumeFile = formData.get('resume') as File | null;
 
@@ -595,10 +606,13 @@ export function CurtainApplicationModal({
       !currentLocation ||
       !currentDistrict ||
       !currentDegree ||
-      !currentCourse ||
-      !gradYearNum
+      !internshipRole ||
+      !Number.isInteger(gradYearNum) ||
+      gradYearNum <= 0
     ) {
-      setSaveMessage('Please fill in all mandatory marked fields, including College Name, State, District, and Major Field of Study.');
+      setSaveMessage(
+        'Please fill in all mandatory fields, including College Name, State, and District.'
+      );
       setIsSubmitting(false);
       return;
     }
@@ -616,16 +630,44 @@ export function CurtainApplicationModal({
     }
 
     if (!consentPrivacy || !consentTerms || !consentDisclaimer) {
-      setSaveMessage('Please review and check all 3 mandatory statutory notices and agreements before submitting.');
+      setSaveMessage(
+        'Please review and check all 3 mandatory statutory notices and agreements before submitting.'
+      );
       setIsSubmitting(false);
       return;
     }
 
-    if (!isSupabaseConfigured) {
-      console.warn('Supabase not configured. Running in local demo mode.');
-      setSaveMessage('Application submitted successfully! (Demo Mode: Verified on Localhost)');
-      setIsSubmitting(false);
-      setTimeout(() => {
+    try {
+      const submissionResponse = await fetch('/api/internship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Firstname: firstName,
+          Lastname: lastName,
+          email,
+          password,
+          Phone: currentPhone,
+          Degree: currentDegree,
+          course: internshipRole,
+          YOG: gradYearNum,
+        }),
+      });
+
+      const submissionResult = await submissionResponse.json().catch(() => null);
+
+      if (!submissionResponse.ok) {
+        throw new Error(
+          submissionResult && typeof submissionResult.message === 'string'
+            ? submissionResult.message
+            : 'Submission failed. Please try again.'
+        );
+      }
+
+      setSaveMessage(
+        'Application submitted successfully! Our engineering team will review your profile.'
+      );
+
+      window.setTimeout(() => {
         form.reset();
         setPhone('+91 ');
         setPassword('');
@@ -635,40 +677,16 @@ export function CurtainApplicationModal({
         setDistrict('');
         setTrack('');
       }, 1500);
-      return;
-    }
-
-    const { error } = await supabase.from('Students').insert([
-      {
-        Firstname: firstName,
-        Lastname: lastName,
-        email: email,
-        Phone: currentPhone,
-        Degree: currentDegree,
-        Course: currentCourse,
-        YOG: gradYearNum,
-      },
-    ]);
-
-    if (error) {
-      console.error('Supabase submission error:', error);
-      setSaveMessage(`Submission failed: ${error.message}`);
+    } catch (error) {
+      console.error('Internship submission error:', error);
+      setSaveMessage(
+        error instanceof Error
+          ? error.message
+          : 'Submission failed. Please try again.'
+      );
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    setSaveMessage('Application submitted successfully! Our engineering team will review your profile.');
-    setIsSubmitting(false);
-    setTimeout(() => {
-      form.reset();
-      setPhone('+91 ');
-      setPassword('');
-      setConfirmPassword('');
-      setCollegeName('');
-      setLocationState('');
-      setDistrict('');
-      setTrack('');
-    }, 1500);
   };
 
   return (
@@ -987,7 +1005,7 @@ export function CurtainApplicationModal({
                 <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl flex flex-col gap-3">
                   <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
                     <span className="text-xs font-mono font-semibold uppercase tracking-wider text-neutral-400">
-                      Major Field of Study <span className="text-neutral-500">*</span>
+                      Major Field of Study <span className="text-neutral-500">(Optional)</span>
                     </span>
                     <span className="text-xs font-mono text-white font-semibold truncate max-w-[200px]">{track}</span>
                   </div>
