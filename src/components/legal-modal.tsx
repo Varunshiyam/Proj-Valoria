@@ -11,6 +11,7 @@ import {
   Scale,
   GraduationCap,
   ScrollText,
+  CreditCard,
   Search,
   ChevronRight,
   CreditCard,
@@ -34,6 +35,7 @@ const DOCUMENT_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'internship-disclaimer': GraduationCap,
   'internship-terms': ScrollText,
   'payment-policy': CreditCard,
+  'internship-payment-policy': CreditCard,
 };
 
 export function LegalModal({

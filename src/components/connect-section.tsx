@@ -305,11 +305,7 @@ export function ConnectSection({ standalone = false }: ConnectSectionProps = {})
       }
     } catch (err: unknown) {
       console.error('Submission error:', err);
-      // Resilient fallback
-      setInquiryResult({
-        inquiryNumber: `INQ-${Math.floor(10000 + Math.random() * 90000)}`,
-        message: 'Inquiry received and queued directly for Valoria engineering leadership.',
-      });
+      setErrorMessage('Could not send your inquiry. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }

@@ -1035,6 +1035,7 @@ export function CurtainApplicationModal({
                         type="file"
                         required
                         accept=".pdf,.doc,.docx"
+                        required
                         className="min-w-0 flex-1 text-xs file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-white/[0.12] file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-white/[0.18]"
                       />
                     </span>

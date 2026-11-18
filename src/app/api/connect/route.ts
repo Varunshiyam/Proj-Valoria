@@ -1,14 +1,32 @@
-import { NextResponse } from 'next/server';
 import { execSync } from 'child_process';
+import nodemailer from 'nodemailer';
+import { NextResponse } from 'next/server';
 
-const SF_INSTANCE_URL = 'https://orgfarm-5c6f02648d-dev-ed.develop.my.salesforce.com';
-let cachedToken: string | null = null;
-let tokenExpiresAt = 0;
+const INQUIRY_RECIPIENT = 'valoriatechnology@gmail.com';
+const SALESFORCE_INSTANCE_URL =
+  'https://orgfarm-5c6f02648d-dev-ed.develop.my.salesforce.com';
+let cachedSalesforceToken: string | null = null;
+let salesforceTokenExpiresAt = 0;
+
+type RequestBody = Record<string, unknown>;
+
+function isRequestBody(value: unknown): value is RequestBody {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readTextField(body: RequestBody, field: string, maxLength: number): string | null {
+  const value = body[field];
+  if (value === undefined) return '';
+  if (typeof value !== 'string') return null;
+
+  const trimmedValue = value.trim();
+  return trimmedValue.length <= maxLength ? trimmedValue : null;
+}
 
 function getSalesforceAccessToken(): string | null {
   const now = Date.now();
-  if (cachedToken && now < tokenExpiresAt) {
-    return cachedToken;
+  if (cachedSalesforceToken && now < salesforceTokenExpiresAt) {
+    return cachedSalesforceToken;
   }
 
   try {
@@ -27,7 +45,6 @@ function getSalesforceAccessToken(): string | null {
       }
     );
 
-    // Strip ANSI color escape codes from CLI output
     const clean = raw.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim();
     const jsonStart = clean.indexOf('{');
     const jsonEnd = clean.lastIndexOf('}');
@@ -35,105 +52,187 @@ function getSalesforceAccessToken(): string | null {
       const parsed = JSON.parse(clean.slice(jsonStart, jsonEnd + 1));
       const token = parsed?.result?.accessToken;
       if (token) {
-        cachedToken = token;
-        tokenExpiresAt = now + 1000 * 60 * 25; // 25 min cache
-        return cachedToken;
+        cachedSalesforceToken = token;
+        salesforceTokenExpiresAt = now + 1000 * 60 * 25;
+        return cachedSalesforceToken;
       }
     }
-  } catch (err: unknown) {
-    console.error('[Salesforce CLI Bridge] Could not get access token:', (err as Error)?.message);
+  } catch (error: unknown) {
+    console.warn(
+      '[Salesforce CLI Bridge] Could not get access token:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
 
   return null;
 }
 
 export async function POST(request: Request) {
+  let body: unknown;
   try {
-    const body = await request.json();
-
-    const {
-      fullName,
-      email,
-      phone,
-      jobTitle,
-      companyName,
-      companyWebsite,
-      companySize,
-      industry,
-      primaryInterest,
-      projectTimeline,
-      budgetRange,
-      projectScope,
-      existingTechStack,
-      preferredDeployment,
-    } = body;
-
-    if (!fullName || !email || !companyName) {
-      return NextResponse.json(
-        { success: false, message: 'Full name, email, and company name are required.' },
-        { status: 400 }
-      );
-    }
-
-    // Direct dispatch to Salesforce REST Endpoint
-    const token = getSalesforceAccessToken();
-
-    if (token) {
-      const sfEndpoint = `${SF_INSTANCE_URL}/services/apexrest/valoria-inquiries/`;
-      const sfResponse = await fetch(sfEndpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone: phone || '',
-          jobTitle: jobTitle || '',
-          companyName,
-          companyWebsite: companyWebsite || '',
-          companySize: companySize || '',
-          industry: industry || '',
-          primaryInterest: primaryInterest || '',
-          projectTimeline: projectTimeline || '',
-          budgetRange: budgetRange || '',
-          projectScope: projectScope || '',
-          existingTechStack: existingTechStack || '',
-          preferredDeployment: preferredDeployment || '',
-          source: 'Website - Lets Connect',
-        }),
-      });
-
-      if (sfResponse.ok) {
-        const sfData = await sfResponse.json();
-        const inquiryNumber = sfData.inquiryNumber || sfData.singleInquiry?.Name;
-        const inquiryId = sfData.inquiryId || sfData.singleInquiry?.Id;
-
-        return NextResponse.json({
-          success: true,
-          inquiryNumber: inquiryNumber || 'INQ-CONFIRMED',
-          inquiryId,
-          message: 'Inquiry registered directly in Valoria Salesforce Hub.',
-        });
-      } else {
-        const errText = await sfResponse.text();
-        console.warn('[Salesforce Bridge] Non-OK response:', sfResponse.status, errText);
-      }
-    }
-
-    // Graceful fallback if token temporarily unavailable
-    const fallbackNumber = `INQ-${Math.floor(10000 + Math.random() * 90000)}`;
-    return NextResponse.json({
-      success: true,
-      inquiryNumber: fallbackNumber,
-      message: 'Inquiry received and queued for Valoria engineering executive desk.',
-    });
-  } catch (error: unknown) {
-    console.error('[Connect API] Error processing inquiry:', error);
+    body = await request.json();
+  } catch {
     return NextResponse.json(
-      { success: false, message: 'Internal server error processing inquiry.' },
-      { status: 500 }
+      { success: false, message: 'Please submit a valid inquiry.' },
+      { status: 400 }
     );
   }
+
+  if (!isRequestBody(body)) {
+    return NextResponse.json(
+      { success: false, message: 'Please submit a valid inquiry.' },
+      { status: 400 }
+    );
+  }
+
+  const fullName = readTextField(body, 'fullName', 200);
+  const email = readTextField(body, 'email', 254);
+  const phone = readTextField(body, 'phone', 100);
+  const jobTitle = readTextField(body, 'jobTitle', 200);
+  const companyName = readTextField(body, 'companyName', 200);
+  const companyWebsite = readTextField(body, 'companyWebsite', 500);
+  const companySize = readTextField(body, 'companySize', 100);
+  const industry = readTextField(body, 'industry', 150);
+  const primaryInterest = readTextField(body, 'primaryInterest', 200);
+  const projectTimeline = readTextField(body, 'projectTimeline', 150);
+  const budgetRange = readTextField(body, 'budgetRange', 150);
+  const projectScope = readTextField(body, 'projectScope', 5000);
+  const existingTechStack = readTextField(body, 'existingTechStack', 2000);
+  const preferredDeployment = readTextField(body, 'preferredDeployment', 500);
+
+  if (
+    fullName === null ||
+    email === null ||
+    phone === null ||
+    jobTitle === null ||
+    companyName === null ||
+    companyWebsite === null ||
+    companySize === null ||
+    industry === null ||
+    primaryInterest === null ||
+    projectTimeline === null ||
+    budgetRange === null ||
+    projectScope === null ||
+    existingTechStack === null ||
+    preferredDeployment === null
+  ) {
+    return NextResponse.json(
+      { success: false, message: 'One or more inquiry fields are invalid.' },
+      { status: 400 }
+    );
+  }
+
+  if (
+    !fullName ||
+    !email ||
+    !companyName ||
+    !projectScope ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    return NextResponse.json(
+      { success: false, message: 'Please provide your name, a valid work email, company, and project scope.' },
+      { status: 400 }
+    );
+  }
+
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, '');
+  if (!gmailAppPassword) {
+    console.error('[Connect API] GMAIL_APP_PASSWORD is not configured.');
+    return NextResponse.json(
+      { success: false, message: 'Inquiry email is not configured yet. Please try again later.' },
+      { status: 503 }
+    );
+  }
+
+  const inquiryNumber = `INQ-${Math.floor(10000 + Math.random() * 90000)}`;
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: INQUIRY_RECIPIENT,
+      pass: gmailAppPassword,
+    },
+  });
+
+  const emailText = [
+    'A new inquiry was submitted through the Valoria Technology website.',
+    '',
+    `Inquiry number: ${inquiryNumber}`,
+    `Full name: ${fullName}`,
+    `Work email: ${email}`,
+    `Phone: ${phone || 'Not provided'}`,
+    `Job title: ${jobTitle || 'Not provided'}`,
+    `Company: ${companyName}`,
+    `Company website: ${companyWebsite || 'Not provided'}`,
+    `Company size: ${companySize || 'Not provided'}`,
+    `Primary industry: ${industry || 'Not provided'}`,
+    `Core technology / engagement track: ${primaryInterest || 'Not provided'}`,
+    `Target schedule: ${projectTimeline || 'Not provided'}`,
+    `Investment scope: ${budgetRange || 'Not provided'}`,
+    `Existing technologies: ${existingTechStack || 'Not provided'}`,
+    `Preferred deployment: ${preferredDeployment || 'Not provided'}`,
+    '',
+    'Architecture and project scope:',
+    projectScope,
+  ].join('\n');
+
+  try {
+    await transporter.sendMail({
+      from: `Valoria Technology <${INQUIRY_RECIPIENT}>`,
+      to: INQUIRY_RECIPIENT,
+      replyTo: { name: fullName, address: email },
+      subject: `New Let's Connect inquiry (${inquiryNumber})`,
+      text: emailText,
+    });
+  } catch (error: unknown) {
+    console.error('[Connect API] Could not send inquiry email:', error);
+    return NextResponse.json(
+      { success: false, message: 'We could not send your inquiry right now. Please try again later.' },
+      { status: 502 }
+    );
+  }
+
+  try {
+    const token = getSalesforceAccessToken();
+    if (token) {
+      const sfResponse = await fetch(
+        `${SALESFORCE_INSTANCE_URL}/services/apexrest/valoria-inquiries/`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fullName,
+            email,
+            phone,
+            jobTitle,
+            companyName,
+            companyWebsite,
+            companySize,
+            industry,
+            primaryInterest,
+            projectTimeline,
+            budgetRange,
+            projectScope,
+            existingTechStack,
+            preferredDeployment,
+            source: 'Website - Lets Connect',
+          }),
+        }
+      );
+
+      if (!sfResponse.ok) {
+        console.warn('[Salesforce Bridge] Non-OK response:', sfResponse.status);
+      }
+    }
+  } catch (error: unknown) {
+    console.warn('[Salesforce Bridge] Inquiry could not be registered:', error);
+  }
+
+  return NextResponse.json({
+    success: true,
+    inquiryNumber,
+    message: 'Your inquiry has been emailed to Valoria Technology.',
+  });
 }

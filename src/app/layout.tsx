@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/logos/valoria-tab-icon.png', type: 'image/png' },
+      { url: '/logos/Valoria%20Icon.png', type: 'image/png' },
     ],
     shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
