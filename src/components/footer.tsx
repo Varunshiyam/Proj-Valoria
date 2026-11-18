@@ -200,15 +200,6 @@ export function Footer() {
                 <li>
                   <button
                     type="button"
-                    onClick={(e) => openLegal('payment-policy', e)}
-                    className="text-left text-neutral-400 transition-colors hover:text-white font-medium text-neutral-300"
-                  >
-                    Payment & Refund Policy
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
                     onClick={(e) => openLegal('internship-disclaimer', e)}
                     className="text-left text-neutral-400 transition-colors hover:text-white"
                   >
