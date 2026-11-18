@@ -11,7 +11,6 @@ import {
   Scale,
   GraduationCap,
   ScrollText,
-  CreditCard,
   Search,
   ChevronRight,
   CreditCard,
